@@ -44,9 +44,6 @@ def compute_edges_dynamic_radius(pcd, base_radius=0.05, threshold=0.1):
         laplacian = np.mean(neighbors, axis=0) - point
         laplacian_norm = np.linalg.norm(laplacian)
         # print (f"Point {i}: Laplacian norm = {laplacian_norm}")
-        
-
-
         # Check if the Laplacian norm exceeds the threshold
         if laplacian_norm > threshold:
             edges.append(point)

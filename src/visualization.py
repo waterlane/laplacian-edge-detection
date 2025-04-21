@@ -10,6 +10,7 @@ def visualize_point_cloud(pcd, title="Point Cloud"):
         pcd (open3d.geometry.PointCloud): Point cloud to visualize.
         title (str): Title of the visualization window.
     """
+    
     vis = o3d.visualization.Visualizer()
     vis.create_window(title=title)
     vis.add_geometry(pcd)
