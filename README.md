@@ -1,1 +1,1 @@
-## 8N-DD-based Point Cloud Edge Detection
+## Laplacian Operator Point Cloud Edge Detection
