@@ -1,7 +1,10 @@
 import open3d as o3d
 import numpy as np
+from sklearn.cluster import DBSCAN
 from utils import load_point_cloud, save_point_cloud
 import edge_detection_args
+
+import os
 
 from visualization import visualize_point_cloud
 
@@ -47,15 +50,49 @@ def compute_edges_dynamic_radius(pcd, base_radius=0.05, threshold=0.1):
         # Check if the Laplacian norm exceeds the threshold
         if laplacian_norm > threshold:
             edges.append(point)
-            print (f"Point {i}: Edge detected with Laplacian norm = {laplacian_norm}")
-        else:
-            print (f"Point {i}: No edge detected with Laplacian norm = {laplacian_norm} within threshold {threshold}")
+        #     print (f"Point {i}: Edge detected with Laplacian norm = {laplacian_norm}")
+        # else:
+        #     print (f"Point {i}: No edge detected with Laplacian norm = {laplacian_norm} within threshold {threshold}")
 
     # Create a new point cloud for edges
     edge_pcd = o3d.geometry.PointCloud()
     edge_pcd.points = o3d.utility.Vector3dVector(np.array(edges))
     
     return edge_pcd
+
+def segment_edges_by_distance(pcd, distance_threshold=0.1):
+    """
+    Segment edges in a point cloud based on distance.
+    
+    Args:
+        pcd (open3d.geometry.PointCloud): Input point cloud.
+        distance_threshold (float): Distance threshold for segmentation.
+        
+    Returns:
+        list: List of segmented point clouds.
+    """
+    # Convert point cloud to numpy array
+    points = np.asarray(pcd.points)
+
+    # Perform DBSCAN clustering
+    clustering = DBSCAN(eps=distance_threshold, min_samples=2).fit(points)
+    labels = clustering.labels_
+
+    # Create segmented point clouds
+    segmented_pcds = []
+    unique_labels = set(labels)
+
+    for label in unique_labels:
+        if label == -1:  # Skip noise points
+            continue
+        segment_indices = np.where(labels == label)[0]
+        segment_points = points[segment_indices]
+
+        segment_pcd = o3d.geometry.PointCloud()
+        segment_pcd.points = o3d.utility.Vector3dVector(segment_points)
+        segmented_pcds.append(segment_pcd)
+
+    return segmented_pcds
 
 if __name__ == "__main__":
 
@@ -76,6 +113,19 @@ if __name__ == "__main__":
     print(f"Computed edges with dynamic radius: {len(edge_pcd.points)} points")
     # Save the edge-detected point cloud
     save_point_cloud(edge_pcd, output_file)
+
+    print(f"Saved edge-detected point cloud to {output_file}")
+    # Segment edges based on distance
+    segmented_pcds = segment_edges_by_distance(edge_pcd)
+    print(f"Segmented edges into {len(segmented_pcds)} segments")
+    # Save segmented point clouds
+    for i, segment_pcd in enumerate(segmented_pcds):
+        # output_name = output_file.split("/")[0]+"/"+output_file.split("/")[1:]
+        output_name = os.path.splitext(output_file)[0]
+        # Save each segment with a unique name
+        segment_output_file = f"{output_name}_segment_{i}.ply"
+        save_point_cloud(segment_pcd, segment_output_file)
+        print(f"Saved segmented point cloud to {segment_output_file}")
     # Visualize the point cloud with edges highlighted
     if visualize:
         visualize_point_cloud(pcd, title="Original Point Cloud")
