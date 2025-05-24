@@ -1,4 +1,5 @@
 import open3d as o3d
+import plotly.graph_objects as go
 import numpy as np
 from sklearn.cluster import DBSCAN
 from utils import load_point_cloud, save_point_cloud
@@ -6,7 +7,7 @@ import edge_detection_args
 
 import os
 
-from visualization import visualize_point_cloud
+from visualization import save_visualization_as_html
 
 def compute_edges_dynamic_radius(pcd, base_radius=0.05, threshold=0.1):
     """
@@ -128,8 +129,21 @@ if __name__ == "__main__":
         print(f"Saved segmented point cloud to {segment_output_file}")
     # Visualize the point cloud with edges highlighted
     if visualize:
-        visualize_point_cloud(pcd, title="Original Point Cloud")
-        visualize_point_cloud(edge_pcd, title="Edge-Detected Point Cloud")
+        # Create a visualization using Plotly
+        data = [
+            {
+                'x': np.asarray(pcd.points)[:, 0],
+                'y': np.asarray(pcd.points)[:, 1],
+                'name': 'Original Point Cloud'
+            },
+            {
+                'x': np.asarray(edge_pcd.points)[:, 0],
+                'y': np.asarray(edge_pcd.points)[:, 1],
+                'name': 'Edge-detected Point Cloud'
+            }
+        ]
+        save_visualization_as_html(data, "Point Cloud with Edges", "point_cloud_edges.html")
+        print("Visualization saved as point_cloud_edges.html")
     print(f"Edge-detected point cloud saved to {output_file}")
 
 

@@ -1,19 +1,21 @@
-import open3d as o3d
+import plotly.graph_objects as go
 
-def visualize_point_cloud(pcd, title="Point Cloud", output_image="output.png"):
+def save_visualization_as_html(data, title, output_file):
     """
-    Visualize a point cloud using Open3D in headless mode and save as an image.
+    Creates a visualization using Plotly and saves it as an HTML file.
 
-    Args:
-        pcd (open3d.geometry.PointCloud): Point cloud to visualize.
-        title (str): Title of the visualization window.
-        output_image (str): Path to save the rendered image.
+    Parameters:
+        data (list of dict): A list of dictionaries containing x, y, and name for each trace.
+                             Example: [{'x': [1, 2, 3], 'y': [4, 5, 6], 'name': 'Trace 1'}, ...]
+        title (str): The title of the plot.
+        output_file (str): The path to save the HTML file.
     """
-    vis = o3d.visualization.VisualizerWithOffscreen()
-    vis.create_window(window_name=title, visible=False)  # Headless mode
-    vis.add_geometry(pcd)
-    vis.poll_events()
-    vis.update_renderer()
-    vis.capture_screen_image(output_image)  # Save the visualization as an image
-    vis.destroy_window()
-    print(f"Saved visualization to {output_image}")
+    fig = go.Figure()
+
+    for trace in data:
+        fig.add_trace(go.Scatter(x=trace['x'], y=trace['y'], mode='lines+markers', name=trace['name']))
+
+    fig.update_layout(title=title, xaxis_title="X-axis", yaxis_title="Y-axis")
+
+    fig.write_html(output_file)
+    print(f"Visualization saved to {output_file}")
